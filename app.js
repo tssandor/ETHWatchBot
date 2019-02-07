@@ -3,15 +3,11 @@
 // 2. IMPLEMENT A DB SO IT WON'T DROP THE WATCHLIST IF IT'S RESTARTED
 // 3. IMPLEMENT /forget
 
-
 const TelegramBot = require('node-telegram-bot-api');
 const requestify = require('requestify');
 const cron = require("node-cron");
 
-// replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TOKEN;
-
-// Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
 
 // Class to store addresses, previous balances and the Telegram chatID
@@ -43,15 +39,15 @@ bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     if (msg.text === "/watch") {
         bot.sendMessage(chatId, "You need to specify an address.\nType /watch followed by a valid ETH address like this:\n<code>/watch 0xB91986a9854be250aC681f6737836945D7afF6Fa</code>" ,{parse_mode : "HTML"});
-    } else {
-        // bot.sendMessage(chatId, 'Received your message');
+    }
+    if (msg.text === "/forget") {
+        bot.sendMessage(chatId, "You need to specify an address.\nType /forget followed by an address you are watching currently, like this:\n<code>/forget 0xB91986a9854be250aC681f6737836945D7afF6Fa</code>" ,{parse_mode : "HTML"});
     }
 });
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, "***************\nHey there! I am a Telegram bot by @torsten1.\n\nI am here to watch Ethereum addresses. I will ping you if there's a change in balance. This is useful if you've just sent a transaction and want to be notified when it arrives. Due to API limitations, I can watch an address for no more than 1 hour.\n\nI only can handle one command at the moment, <code>/watch</code>.\n\nSimply type <code>/watch</code> followed by the Ethereum address you want to check!" ,{parse_mode : "HTML"});
-    // bot.sendMessage(chatId, "Your chat ID is " + chatId ,{parse_mode : "HTML"});
+    bot.sendMessage(chatId, "***************\n\nHey there! I am a Telegram bot by @torsten1.\n\nI am here to watch Ethereum addresses. I will ping you if there's a change in balance. This is useful if you've just sent a transaction and want to be notified when it arrives. Due to API limitations, I can watch an address for no more than 1 hour.\n\n<b>Commands</b>\n\n* <code>/watch (address)</code> - start watching an address.\n* <code>/forget (address)</code> - stop watching an address.\n* <code>/list</code> - list the addresses you are watching.\n\nHave fun :)" ,{parse_mode : "HTML"});
 })
 
 bot.onText(/\/watch (.+)/, (msg, match) => {
@@ -65,17 +61,53 @@ bot.onText(/\/watch (.+)/, (msg, match) => {
         .then(function(response) {
             response.getBody();
             var responseJSON = JSON.parse(response.body);
-            bot.sendMessage(chatId, responseJSON.ETH.balance);
-            //add entry to the watchlist
+            // adding entry to the watchlist
+            // TO-DO: CHECK IF IT'S A DUPLICATE
             var date = new Date();
             var timestamp = date.getTime();
             const newEntry = new WatchEntry(chatId, ETHaddress, responseJSON.ETH.balance, timestamp);
             watchDB.push(newEntry);
+            bot.sendMessage(chatId, `Started watching the address ${ETHaddress}\n`);
         });
     } else {
         bot.sendMessage(chatId, "This is not a valid ETH address.\nType /watch followed by a valid ETH address like this:\n<code>/watch 0xB91986a9854be250aC681f6737836945D7afF6Fa</code>" ,{parse_mode : "HTML"});
     }
 });
+
+bot.onText(/\/forget (.+)/, (msg, match) => {
+
+    const chatId = msg.chat.id;
+    const ETHaddress = match[1];
+    var newWatchDB = [];
+    var nothingToForget = true;
+
+    watchDB.forEach(function(entry) {
+        if ((entry.chatID === chatId) && (entry.ETHaddress === ETHaddress)) {
+            bot.sendMessage(chatId, `I stopped monitoring the address ${entry.ETHaddress}.`);
+            nothingToForget = false;    
+        } else {
+            newWatchDB.push(entry);
+        }
+    });
+
+    if (nothingToForget) {
+        bot.sendMessage(chatId, `I couldn't find the address ${ETHaddress} on the watchlist.`);    
+    }
+
+    watchDB = newWatchDB;
+
+
+});
+
+bot.onText(/\/list/, (msg) => {
+    const chatId = msg.chat.id;
+    watchDB.forEach(function(entry) {
+        if (entry.chatID === chatId) {
+            bot.sendMessage(chatId, `You are currently monitoring this address: ${entry.ETHaddress}\n`);    
+        }
+    });
+})
+
 
 function checkAllAddresses() {
 

@@ -13,8 +13,8 @@ The bot is using the [Ethplorer API](https://github.com/EverexIO/Ethplorer/wiki/
 This current version is a very barebone MVP, and there's a lot more to do:
 - [ ] Porting it to Web3.js so the API limitations don't apply.
 - [ ] Implementing a database, so the watchlist is not dropped every time the bot is restarted.
-- [ ] Implementing a /forget command
+- [x] Implementing a /forget command
 
-# License
+# License 
 
 Released under CC-BY.
