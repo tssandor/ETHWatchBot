@@ -4,7 +4,9 @@ Simple Telegram bot to monitor Ethereum addresses. The bot is available @ETHWatc
 
 Commands:
 * /start - displays a greeting
-* /watch <address> - start monitoring an address
+* /watch (address) - starts monitoring an address
+* /forget (address) - stops monitoring an address
+* /list - lists the currently monitored addresses
 
 The bot is using the [Ethplorer API](https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API). In order to avoid service abuse it checks the addresses every 5 minutes.
 
