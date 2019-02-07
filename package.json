@@ -1,0 +1,16 @@
+{
+  "name": "ethwatch",
+  "version": "1.0.0",
+  "description": "ETH address watcher",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-cron": "^2.0.3",
+    "node-telegram-bot-api": "^0.30.0",
+    "requestify": "^0.2.5"
+  }
+}
