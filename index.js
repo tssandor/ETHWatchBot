@@ -1,7 +1,3 @@
-// TO DO
-// 1. IMPLEMENT A DB SO IT WON'T DROP THE WATCHLIST IF IT'S RESTARTED
-
-
 // *********************************
 // Defining variables
 // *********************************
@@ -10,8 +6,18 @@ const TelegramBot = require('node-telegram-bot-api');
 const cron = require("node-cron");
 var etherscan = require('etherscan-api').init(process.env.ETHERSCAN_KEY);
 
+// Heroku deployment
+const url = process.env.NOW_URL;
+
+const options = {
+    webHook: {
+        port: process.env.PORT
+    }
+};
+const url = process.env.APP_URL;
+  
 const telegramBotToken = process.env.TOKEN;
-const bot = new TelegramBot(telegramBotToken, {polling: true});
+const bot = new TelegramBot(telegramBotToken, options);
 const botOwner = process.env.BOTOWNER;
 
 // Class to store addresses, previous balances and the Telegram chatID
@@ -193,13 +199,14 @@ async function checkAllAddresses() {
     }
 }
 
-function main() {
+function watch() {
     // do the scan every minute
     cron.schedule('*/1 * * * *', () => {
         checkAllAddresses();
     });
 }
 
+bot.setWebHook(`${url}/bot${telegramBotToken}`);
 // kick it off
-main();
+watch();
 

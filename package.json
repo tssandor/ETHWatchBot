@@ -2,15 +2,18 @@
   "name": "ethwatch",
   "version": "1.0.0",
   "description": "ETH address watcher",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "etherscan-api": "^10.0.0",
     "node-cron": "^2.0.3",
     "node-telegram-bot-api": "^0.30.0"
+  },
+  "engines": {
+    "node": "8.13.0"
   }
 }
