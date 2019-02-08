@@ -1,7 +1,6 @@
 // TO DO
 // 1. PORT IT TO WEB3 SO API LIMITATIONS DON'T APPLY
 // 2. IMPLEMENT A DB SO IT WON'T DROP THE WATCHLIST IF IT'S RESTARTED
-// 3. IMPLEMENT /forget
 
 const TelegramBot = require('node-telegram-bot-api');
 const requestify = require('requestify');
@@ -96,18 +95,26 @@ bot.onText(/\/forget (.+)/, (msg, match) => {
 
     watchDB = newWatchDB;
 
-
 });
 
 bot.onText(/\/list/, (msg) => {
     const chatId = msg.chat.id;
+    var nothingToList = true;
+    var listOfAddresses = '';
     watchDB.forEach(function(entry) {
         if (entry.chatID === chatId) {
-            bot.sendMessage(chatId, `You are currently monitoring this address: ${entry.ETHaddress}\n`);    
+            nothingToList = false;
+            listOfAddresses = listOfAddresses + `* ${entry.ETHaddress}\n`;    
         }
     });
-})
 
+    if (nothingToList) {
+        bot.sendMessage(chatId, `There are no addresses on your watchlist. Maybe time to add some!`);    
+    } else {
+        bot.sendMessage(chatId, 'You are currently monitoring\n' + listOfAddresses);
+    }
+
+})
 
 function checkAllAddresses() {
 
