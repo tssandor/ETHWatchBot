@@ -193,7 +193,7 @@ async function checkAllAddresses() {
     }
 }
 
-fuction main() {
+function main() {
     // do the scan every minute
     cron.schedule('*/1 * * * *', () => {
         checkAllAddresses();
