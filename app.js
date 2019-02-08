@@ -1,6 +1,11 @@
 // TO DO
 // 1. IMPLEMENT A DB SO IT WON'T DROP THE WATCHLIST IF IT'S RESTARTED
 
+
+// *********************************
+// Defining variables
+// *********************************
+
 const TelegramBot = require('node-telegram-bot-api');
 const cron = require("node-cron");
 var etherscan = require('etherscan-api').init(process.env.ETHERSCAN_KEY);
@@ -22,6 +27,10 @@ class WatchEntry {
 // Array to store WatchEntry objects
 var watchDB = [];
 
+// *********************************
+// Helper functions
+// *********************************
+
 // Function to check if an address is a valid ETH address
 var isAddress = function (address) {
     address = address.toLowerCase();
@@ -34,6 +43,16 @@ var isAddress = function (address) {
     }
 };
 
+// *********************************
+// Telegram bot event listeners
+// *********************************
+
+// Telegram error handling
+bot.on('polling_error', (error) => {
+    console.log(error.message);  // => 'EFATAL'
+});
+
+// Telegram checking for commands w/o parameters
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     if (msg.text === '/watch') {
@@ -44,11 +63,13 @@ bot.on('message', (msg) => {
     }
 });
 
+// Telegram /start command
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, "***************\n\nHey there! I am a Telegram bot by @torsten1.\n\nI am here to watch Ethereum addresses. I will ping you if there's a change in balance. This is useful if you've just sent a transaction and want to be notified when it arrives. Due to API limitations, I can watch an address for no more than 24 hours.\n\n<b>Commands</b>\n\n* <code>/watch (address)</code> - start watching an address.\n* <code>/forget (address)</code> - stop watching an address.\n* <code>/list</code> - list the addresses you are watching.\n\nHave fun :)" ,{parse_mode : "HTML"});
 });
 
+// Telegram /watch command
 bot.onText(/\/watch (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
     const ETHaddress = match[1];
@@ -58,7 +79,6 @@ bot.onText(/\/watch (.+)/, (msg, match) => {
             var date = new Date();
             var timestamp = date.getTime();
             const newEntry = new WatchEntry(chatId, ETHaddress, balanceData.result, timestamp);
-            console.log(`New entry added with the data:\n${chatId}\n${ETHaddress}\n${balanceData.result}\n${timestamp}`);
             watchDB.push(newEntry);
             var balanceToDisplay = balanceData.result / 1000000000000000000;
             balanceToDisplay = balanceToDisplay.toFixed(4);
@@ -74,6 +94,7 @@ bot.onText(/\/watch (.+)/, (msg, match) => {
     }
 });
 
+// Telegram /forget command
 bot.onText(/\/forget (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
     const ETHaddress = match[1];
@@ -97,6 +118,7 @@ bot.onText(/\/forget (.+)/, (msg, match) => {
     watchDB = newWatchDB;
 });
 
+// Telegram /list command
 bot.onText(/\/list/, (msg) => {
     const chatId = msg.chat.id;
     var nothingToList = true;
@@ -114,12 +136,17 @@ bot.onText(/\/list/, (msg) => {
     }
 });
 
+// Telegram /check command (not public)
 bot.onText(/\/check/, (msg) => {
     // To manually trigger a check. For testing purposes.
     checkAllAddresses();
     // Debug admin message for the bot owner
     bot.sendMessage(botOwner, `--> ADMIN MESSAGE\nSomeone called the /check function.`);
 });
+
+// *********************************
+// Main functions
+// *********************************
 
 async function checkAllAddresses() {
     var debugNumberOfAlertsDelivered = 0;
@@ -129,7 +156,6 @@ async function checkAllAddresses() {
         var entry = watchDB[i];
         // we check if the balance has changed
         const balance = await etherscan.account.balance(entry.ETHaddress);
-        console.log(`\nComparing Etherscan balance of ${balance.result} with DB entry ${entry.currentBalance}`);
         if (balance.result === entry.currentBalance) {
             // no transfer
         } else {
@@ -167,11 +193,13 @@ async function checkAllAddresses() {
     }
 }
 
-bot.on('polling_error', (error) => {
-    console.log(error.message);  // => 'EFATAL'
-});
+fuction main() {
+    // do the scan every minute
+    cron.schedule('*/1 * * * *', () => {
+        checkAllAddresses();
+    });
+}
 
-// do the scan every minute
-cron.schedule('*/1 * * * *', () => {
-    checkAllAddresses();
-});
+// kick it off
+main();
+
