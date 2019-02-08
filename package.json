@@ -9,8 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "etherscan-api": "^10.0.0",
     "node-cron": "^2.0.3",
-    "node-telegram-bot-api": "^0.30.0",
-    "requestify": "^0.2.5"
+    "node-telegram-bot-api": "^0.30.0"
   }
 }
